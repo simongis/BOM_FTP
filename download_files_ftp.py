@@ -2,6 +2,7 @@ import ftplib
 import os
 import gzip
 import shutil
+import arcpy
 
 host = 'ftp.bom.gov.au'
 source_dir = '/register/bom630/adfd'
@@ -9,6 +10,7 @@ filename = 'IDZ71117_AUS_FFDI_SFC.nc.gz'  # Max Fire Danger Index NetCDF
 username = 'yourusername'
 password = 'yourpassword'
 dest_dir = r"D:\Work\BOM\download_from_ftp"
+arcpy.env.workspace = "D:\Work\BOM\workings"
 
 def downloadFile():
     # connect to FTP
@@ -42,13 +44,43 @@ def unZip():
     os.remove(os.path.join(dest_dir, filename))
     print(filename, ' deleted')
 
+def syncMD():
+    # script assumes that MD already exists from setup guide
+    # ToDo - automate creating the MD if it does not already exist?
+
+    # Synchronize source and add new data
+    mdname = "BOM_FTP.gdb/MaxFireIndex"
+    query = "#"
+    updatenew = "UPDATE_WITH_NEW_ITEMS"
+    syncstale = "SYNC_STALE"
+    updatecs = "#"
+    updatebnd = "#"
+    updateovr = "#"
+    buildpy = "NO_PYRAMIDS"
+    calcstats = "CALCULATE_STATISTICS"
+    buildthumb = "NO_THUMBNAILS"
+    buildcache = "NO_ITEM_CACHE"
+    updateras = "NO_RASTER"
+    updatefield = "NO_FIELDS"
+    fields = "#"
+
+    arcpy.SynchronizeMosaicDataset_management(
+        mdname, query, updatenew, syncstale, updatecs, updatebnd,
+        updateovr, buildpy, calcstats, buildthumb, buildcache,
+        updateras, updatefield, fields)
+
+
+    print('Finished syncing Mosaic Dataset')
+
+
 
 def main():
     # download file from FTP
     downloadFile()
     # unzip file and delete zip
     unZip()
-    # update mosaic dataset
+    # sync mosaic dataset
+    syncMD()
 
     print('Finished')
 
