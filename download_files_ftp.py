@@ -6,7 +6,8 @@ import arcpy
 
 host = 'ftp.bom.gov.au'
 source_dir = '/register/bom630/adfd'
-filename = 'IDZ71117_AUS_FFDI_SFC.nc.gz'  # Max Fire Danger Index NetCDF
+# others to test with - IDZ71094_AUS_WxThunderstorms_SFC.nc.gz    IDZ71144_AUS_GrassFuelLoad_SFC.nc.gz  IDZ71117_AUS_FFDI_SFC.nc.gz
+filename = 'IDZ71117_AUS_FFDI_SFC.nc.gz'  # Max Fire Danger Index NetCDF  # ToDo add a list of files to append into MD
 username = 'yourusername'
 password = 'yourpassword'
 dest_dir = r"D:\Work\BOM\download_from_ftp"
@@ -49,7 +50,7 @@ def syncMD():
     # ToDo - automate creating the MD if it does not already exist?
 
     # Synchronize source and add new data
-    mdname = "BOM_FTP.gdb/MaxFireIndex"
+    mdname = "BOM_FTP.gdb/MaxFireIndex" #ToDo - Make this a global variable
     query = "#"
     updatenew = "UPDATE_WITH_NEW_ITEMS"
     syncstale = "SYNC_STALE"
@@ -65,10 +66,12 @@ def syncMD():
     fields = "#"
 
     arcpy.SynchronizeMosaicDataset_management(
-        mdname, query, updatenew, syncstale, updatecs, updatebnd,
-        updateovr, buildpy, calcstats, buildthumb, buildcache,
-        updateras, updatefield, fields)
-
+        mdname, None, "UPDATE_WITH_NEW_ITEMS", "SYNC_ALL", "UPDATE_CELL_SIZES",
+        "UPDATE_BOUNDARY", "NO_OVERVIEWS", "NO_PYRAMIDS", "CALCULATE_STATISTICS",
+        "NO_THUMBNAILS", "NO_ITEM_CACHE", "NO_RASTER", "UPDATE_FIELDS",
+        "CenterX;CenterY;Dimensions;GroupName;ProductName;Raster;Shape;StdTime;Tag;Variable;ZOrder",
+        "UPDATE_EXISTING_ITEMS", "REMOVE_BROKEN_ITEMS", "OVERWRITE_EXISTING_ITEMS",
+        "REFRESH_INFO", "NO_STATISTICS")
 
     print('Finished syncing Mosaic Dataset')
 
