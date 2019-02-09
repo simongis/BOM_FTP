@@ -1,5 +1,5 @@
 import ftplib
-import os
+import os, sys
 import gzip
 import shutil
 import arcpy
@@ -8,11 +8,11 @@ import arcpy
 host = 'ftp.bom.gov.au'
 source_dir = '/register/bom630/adfd'
 # others to test with - IDZ71094_AUS_WxThunderstorms_SFC.nc.gz    IDZ71144_AUS_GrassFuelLoad_SFC.nc.gz  IDZ71117_AUS_FFDI_SFC.nc.gz
-filename = 'IDZ71000_AUS_T_SFC.nc.gz'  # Surface tempoerature
-username = 'yourusername'
-password = 'yourpassword'
+filename = 'IDZ71000_AUS_T_SFC.nc.gz'  
+username = ''
+password = ''
 dest_dir = r"D:\Work\BOM\download_from_ftp"
-arcpy.env.workspace = r"D:\Work\BOM\workings"
+arcpy.env.workspace = os.path.join(os.path.dirname(sys.argv[0]), "BOM_FTP.gdb")
 
 
 def main():
@@ -60,30 +60,15 @@ def unZip():
     os.remove(os.path.join(dest_dir, filename))
     print(filename, ' deleted')
 
-def syncMD():
-    # script assumes that MD already exists from setup guide
-    # ToDo - automate creating the MD if it does not already exist?
-
-    # Synchronize source and add new data
-#    mdname = "BOM_FTP.gdb/MaxTemp" #ToDo - Make this a global variable
-#    query = "#"
-#    updatenew = "UPDATE_WITH_NEW_ITEMS"
-#    syncstale = "SYNC_STALE"
-#    updatecs = "#"
-#    updatebnd = "#"
-#    updateovr = "#"
-#    buildpy = "NO_PYRAMIDS"
-#    calcstats = "CALCULATE_STATISTICS"
-#    buildthumb = "NO_THUMBNAILS"
-#    buildcache = "NO_ITEM_CACHE"
-#    updateras = "NO_RASTER"
-#    updatefield = "NO_FIELDS"
-#    fields = "#"
-
-    print("syncing mosaic dataset with : " + filename)
-
-    arcpy.SynchronizeMosaicDataset_management(in_mosaic_dataset=r"D:\Work\BOM\workings\BOM_FTP.gdb\T_SFC_ArcMap", where_clause="", new_items="UPDATE_WITH_NEW_ITEMS", sync_only_stale="SYNC_STALE", update_cellsize_ranges="UPDATE_CELL_SIZES", update_boundary="UPDATE_BOUNDARY", update_overviews="UPDATE_OVERVIEWS", build_pyramids="NO_PYRAMIDS", calculate_statistics="CALCULATE_STATISTICS", build_thumbnails="NO_THUMBNAILS", build_item_cache="NO_ITEM_CACHE", rebuild_raster="REBUILD_RASTER", update_fields="UPDATE_FIELDS", fields_to_update="CenterX;CenterY;Dimensions;GroupName;ProductName;Raster;Shape;StdTime;Tag;Variable;ZOrder", existing_items="UPDATE_EXISTING_ITEMS", broken_items="REMOVE_BROKEN_ITEMS", skip_existing_items="SKIP_EXISTING_ITEMS", refresh_aggregate_info="NO_REFRESH_INFO", estimate_statistics="NO_STATISTICS")
-
+def syncMD():    
+    print("Removing Rasters & Footprints")
+    arcpy.management.RemoveRastersFromMosaicDataset("T_SFC", "OBJECTID >= 0", "UPDATE_BOUNDARY", "MARK_OVERVIEW_ITEMS", "DELETE_OVERVIEW_IMAGES", "DELETE_ITEM_CACHE", "REMOVE_MOSAICDATASET_ITEMS", "UPDATE_CELL_SIZES")
+    print("Removed Rasters & Footprints")
+    print("Adding Rasters: " + filename[:-3])
+    arcpy.management.AddRastersToMosaicDataset("T_SFC", "NetCDF", dest_dir, "UPDATE_CELL_SIZES", "UPDATE_BOUNDARY", "NO_OVERVIEWS", None, 0, 1500, None, "*.nc;*.nc4", "NO_SUBFOLDERS", "OVERWRITE_DUPLICATES", "NO_PYRAMIDS", "CALCULATE_STATISTICS", "NO_THUMBNAILS", None, "NO_FORCE_SPATIAL_REFERENCE", "NO_STATISTICS", None, "NO_PIXEL_CACHE", "")
+    print("Finished adding " + filename[:-3])
+    print("syncing mosaic dataset")
+    arcpy.management.SynchronizeMosaicDataset("T_SFC", None, "UPDATE_WITH_NEW_ITEMS", "SYNC_STALE", "UPDATE_CELL_SIZES", "UPDATE_BOUNDARY", "NO_OVERVIEWS", "NO_PYRAMIDS", "NO_STATISTICS", "NO_THUMBNAILS", "NO_ITEM_CACHE", "REBUILD_RASTER", "UPDATE_FIELDS", "CenterX;CenterY;Dimensions;GroupName;ProductName;Raster;Shape;StdTime;Tag;Variable;ZOrder", "IGNORE_EXISTING_ITEMS", "IGNORE_BROKEN_ITEMS", "SKIP_EXISTING_ITEMS", "REFRESH_INFO", "NO_STATISTICS")
     print('Finished syncing Mosaic Dataset')
 
 if __name__ == '__main__':
